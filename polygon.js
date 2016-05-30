@@ -1,4 +1,7 @@
 var Polygon = function(points) {
+  if (points.length < 3) {
+    throw new Error('Polygon needs at least 3 points');
+  }
   this.points = points;
 };
 
@@ -22,17 +25,24 @@ Polygon.prototype.containsPoint = function(point) {
 };
 
 Polygon.prototype.buffer = function(offset) {
-  var circle = function(centerX, centerY, radius, steps) {
+  var circle = function(centerPoint, radius, steps) {
     steps = steps || 16;
-    var result = [];
+    var points = [];
     for (var i = 0; i < steps; i++) {
-      var x = (centerX + radius * Math.cos(2 * Math.PI * i / steps));
-      var y = (centerY + radius * Math.sin(2 * Math.PI * i / steps));
-      result.push(new Point(x, y));
+      var lat = (centerPoint.getLat() + radius * Math.cos(2 * Math.PI * i / steps));
+      var lon = (centerPoint.getLon() + radius * Math.sin(2 * Math.PI * i / steps));
+      points.push(new Point(lat, lon));
     }
-    return result;
+    return new Polygon(points);
   };
-  
+
+  var angle = function(line) {
+    var dlat = line.getEndPoint().getLat() - line.getStartPoint().getLat();
+    var dlon = line.getEndPoint().getLon() - line.getStartPoint().getLon();
+    var theta = Math.atan2(dlat, dlon); // range (-PI, PI]
+    theta *= 180 / Math.PI; // rads to degs, range (-180, 180]
+    return theta < 0 ? 360 + theta : theta;
+  };
 };
 
 module.exports = Polygon;
